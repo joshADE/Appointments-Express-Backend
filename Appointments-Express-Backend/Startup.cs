@@ -30,8 +30,8 @@ namespace Appointments_Express_Backend
             services.AddControllers();
 
             // setting up the db context
-            services.AddDbContext<AppointmentDBContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("Prod")));
+            // services.AddDbContext<AppointmentDBContext>(options =>
+            // options.UseSqlServer(Configuration.GetConnectionString("Prod")));
 
             // PostgreSQL
             services.AddEntityFrameworkNpgsql().AddDbContext<AppointmentDBContext>(options => 
@@ -43,7 +43,7 @@ namespace Appointments_Express_Backend
                 if (env == "Development")
                 {
                     // Use connection string from file.
-                    connStr = Configuration.GetConnectionString("ApplicationDbContext");
+                    connStr = Configuration.GetConnectionString("DefaultConnection");
                 }
                 else
                 {
