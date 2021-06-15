@@ -1,9 +1,10 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Appointments_Express_Backend.Migrations
 {
-    public partial class InitialDatabase : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,12 +12,12 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Customers",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    firstName = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    lastName = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(100)", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    firstName = table.Column<string>(type: "text", nullable: false),
+                    lastName = table.Column<string>(type: "text", nullable: false),
+                    password = table.Column<string>(type: "text", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -27,9 +28,9 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Permissions",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "nvarchar(100)", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,10 +41,10 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    description = table.Column<string>(type: "nvarchar(300)", nullable: true)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -54,13 +55,13 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Stores",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    location = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    minTimeBlock = table.Column<int>(type: "int", nullable: false),
-                    maxTimeBlock = table.Column<int>(type: "int", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    location = table.Column<string>(type: "text", nullable: false),
+                    minTimeBlock = table.Column<int>(type: "integer", nullable: false),
+                    maxTimeBlock = table.Column<int>(type: "integer", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,14 +72,14 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    firstName = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    lastName = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    username = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    firstName = table.Column<string>(type: "text", nullable: false),
+                    lastName = table.Column<string>(type: "text", nullable: false),
+                    username = table.Column<string>(type: "text", nullable: false),
+                    password = table.Column<string>(type: "text", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -89,8 +90,8 @@ namespace Appointments_Express_Backend.Migrations
                 name: "RolePermissions",
                 columns: table => new
                 {
-                    roleId = table.Column<int>(type: "int", nullable: false),
-                    permissionId = table.Column<int>(type: "int", nullable: false)
+                    roleId = table.Column<int>(type: "integer", nullable: false),
+                    permissionId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -113,16 +114,16 @@ namespace Appointments_Express_Backend.Migrations
                 name: "Appointments",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    storeId = table.Column<int>(type: "int", nullable: false),
-                    customerId = table.Column<int>(type: "int", nullable: false),
-                    start = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    end = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    title = table.Column<string>(type: "nvarchar(100)", nullable: false),
-                    description = table.Column<string>(type: "nvarchar(300)", nullable: true),
-                    status = table.Column<int>(type: "int", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    storeId = table.Column<int>(type: "integer", nullable: false),
+                    customerId = table.Column<int>(type: "integer", nullable: false),
+                    start = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    end = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    title = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    status = table.Column<int>(type: "integer", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -145,13 +146,13 @@ namespace Appointments_Express_Backend.Migrations
                 name: "ClosedDaysTimes",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    storeId = table.Column<int>(type: "int", nullable: false),
-                    from = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    to = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    repeat = table.Column<bool>(type: "bit", nullable: false),
-                    repeatInterval = table.Column<int>(type: "int", nullable: true)
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    storeId = table.Column<int>(type: "integer", nullable: false),
+                    from = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    to = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    repeat = table.Column<bool>(type: "boolean", nullable: false),
+                    repeatInterval = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -168,10 +169,10 @@ namespace Appointments_Express_Backend.Migrations
                 name: "StoreHours",
                 columns: table => new
                 {
-                    storeId = table.Column<int>(type: "int", nullable: false),
-                    dayOfWeek = table.Column<int>(type: "int", nullable: false),
-                    open = table.Column<TimeSpan>(type: "time", nullable: false),
-                    close = table.Column<TimeSpan>(type: "time", nullable: false)
+                    storeId = table.Column<int>(type: "integer", nullable: false),
+                    dayOfWeek = table.Column<int>(type: "integer", nullable: false),
+                    open = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    close = table.Column<TimeSpan>(type: "interval", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -188,10 +189,10 @@ namespace Appointments_Express_Backend.Migrations
                 name: "UserStoreRoles",
                 columns: table => new
                 {
-                    userId = table.Column<int>(type: "int", nullable: false),
-                    storeId = table.Column<int>(type: "int", nullable: false),
-                    roleId = table.Column<int>(type: "int", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    userId = table.Column<int>(type: "integer", nullable: false),
+                    storeId = table.Column<int>(type: "integer", nullable: false),
+                    roleId = table.Column<int>(type: "integer", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -221,7 +222,7 @@ namespace Appointments_Express_Backend.Migrations
                 columns: new[] { "id", "name" },
                 values: new object[,]
                 {
-                    { 1, "Create Store" },
+                    { 1, "Delete Store" },
                     { 2, "Edit Store Details" },
                     { 3, "Edit Store Hours" },
                     { 4, "Edit Closed Times" },
@@ -235,6 +236,20 @@ namespace Appointments_Express_Backend.Migrations
                 {
                     { 1, "Owner/Creator of the store", "Owner" },
                     { 2, "Manager of the store and appointment times", "Manager" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "RolePermissions",
+                columns: new[] { "permissionId", "roleId" },
+                values: new object[,]
+                {
+                    { 1, 1 },
+                    { 2, 1 },
+                    { 3, 1 },
+                    { 4, 1 },
+                    { 5, 1 },
+                    { 3, 2 },
+                    { 4, 2 }
                 });
 
             migrationBuilder.CreateIndex(

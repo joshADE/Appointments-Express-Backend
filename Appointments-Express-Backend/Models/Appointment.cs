@@ -31,10 +31,8 @@ namespace Appointments_Express_Backend.Models
 
         [Required]
         [MinLength(2)]
-        [Column(TypeName = "nvarchar(100)")]
         public string title { get; set; }
 
-        [Column(TypeName = "nvarchar(300)")]
         public string description { get; set; }
 
         public AppointmentStatus status { get; set; }

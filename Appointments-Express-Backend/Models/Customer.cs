@@ -14,19 +14,16 @@ namespace Appointments_Express_Backend.Models
 
         [Required]
         [MinLength(2)]
-        [Column(TypeName = "nvarchar(100)")]
         public string firstName { get; set; }
 
         [Required]
         [MinLength(2)]
-        [Column(TypeName = "nvarchar(100)")]
         public string lastName { get; set; }
 
         [Required]
         public string password { get; set; }
 
         [Required]
-        [Column(TypeName = "nvarchar(100)")]
         public string email { get; set; }
 
     }
