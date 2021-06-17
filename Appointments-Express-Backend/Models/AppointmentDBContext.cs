@@ -35,8 +35,16 @@ namespace Appointments_Express_Backend.Models
                 .HasIndex(u => u.email).IsUnique();
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.username).IsUnique();
+            modelBuilder.Entity<User>()
+                .Property(e => e.createdAt)
+                .HasDefaultValueSql("NOW()")
+                .ValueGeneratedOnAdd();
 
             // Store Table
+            modelBuilder.Entity<Store>()
+                .Property(e => e.createdAt)
+                .HasDefaultValueSql("NOW()")
+                .ValueGeneratedOnAdd();
 
             // Role Table
             modelBuilder.Entity<Role>()
@@ -92,6 +100,11 @@ namespace Appointments_Express_Backend.Models
             // UserStoreRole Table
             modelBuilder.Entity<UserStoreRole>()
                 .HasKey(x => new { x.userId, x.storeId, x.roleId });
+
+            modelBuilder.Entity<UserStoreRole>()
+                .Property(e => e.createdAt)
+                .HasDefaultValueSql("NOW()")
+                .ValueGeneratedOnAdd();
 
             // RolePermission Table
             modelBuilder.Entity<RolePermission>()
@@ -150,6 +163,11 @@ namespace Appointments_Express_Backend.Models
             modelBuilder.Entity<Appointment>()
                 .Property(a => a.status)
                 .HasConversion<int>();
+
+            modelBuilder.Entity<Appointment>()
+                .Property(e => e.createdAt)
+                .HasDefaultValueSql("NOW()")
+                .ValueGeneratedOnAdd();
 
         }
 

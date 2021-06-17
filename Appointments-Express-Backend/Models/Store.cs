@@ -26,7 +26,7 @@ namespace Appointments_Express_Backend.Models
         [Required]
         public int maxTimeBlock { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }
     }
 }

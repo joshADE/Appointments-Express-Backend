@@ -22,7 +22,7 @@ namespace Appointments_Express_Backend.Models
         public virtual Role role { get; set; }
 
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }
     }
 }

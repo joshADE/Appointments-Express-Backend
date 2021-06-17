@@ -39,7 +39,7 @@ namespace Appointments_Express_Backend.Models
 
 
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }
 
         [ForeignKey("storeId")]

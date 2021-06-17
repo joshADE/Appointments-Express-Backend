@@ -30,7 +30,7 @@ namespace Appointments_Express_Backend.Models
         [Required]
         public string email { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }
 
 
