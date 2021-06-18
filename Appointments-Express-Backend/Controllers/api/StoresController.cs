@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Appointments_Express_Backend.Models;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -52,7 +53,17 @@ namespace Appointments_Express_Backend.Controllers.api
                 return BadRequest();
             }
 
-            _context.Entry(store).State = EntityState.Modified;
+            var storeFromDB = await _context.Stores.FindAsync(id);
+
+            if (storeFromDB == null)
+            {
+                return NotFound();
+            }
+
+            store.createdAt = storeFromDB.createdAt;
+       
+            _context.Entry(storeFromDB).State = EntityState.Detached;
+            _context.Stores.Update(store);
 
             try
             {
@@ -71,6 +82,41 @@ namespace Appointments_Express_Backend.Controllers.api
             }
 
             return NoContent();
+        }
+
+
+        // PATCH: api/Stores/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchStore(int id, [FromBody] JsonPatchDocument<Store> jsonPatch)
+        {
+
+
+            var entity = await _context.Stores.FindAsync(id);
+
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            jsonPatch.ApplyTo(entity);
+            _context.Entry(entity).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StoreExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok(entity);
         }
 
         // POST: api/Stores
