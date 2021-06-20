@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Appointments_Express_Backend.Models;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
+using Appointments_Express_Backend.AuthenticationManager;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StoresController : ControllerBase
@@ -22,6 +25,7 @@ namespace Appointments_Express_Backend.Controllers.api
         }
 
         // GET: api/Stores
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Store>>> GetStores()
         {
@@ -119,17 +123,44 @@ namespace Appointments_Express_Backend.Controllers.api
             return Ok(entity);
         }
 
-        // POST: api/Stores
+        // POST: api/Stores/createstore
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        [HttpPost]
-        public async Task<ActionResult<Store>> PostStore(Store store)
+        [HttpPost("createstore")]
+        public async Task<ActionResult<Store>> CreateStore(Store store)
         {
-            _context.Stores.Add(store);
-            await _context.SaveChangesAsync();
+            var userId = Authorization.GetUserId(User);
+            if (userId == null)
+                return NotFound();
+
+            //if(!Authorization.UserHasPermission(_context, int.Parse(userId), store.id, "Create Store")){  // Create Store Permission Doesn't actually exist in DB
+                //return Unauthorized();
+            //}
+
+
+            using (var dbContextTransaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    _context.Stores.Add(store);
+                    await _context.SaveChangesAsync();
+
+                    _context.UserStoreRoles.Add(new UserStoreRole { userId = int.Parse(userId), storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
+                    await _context.SaveChangesAsync();
+
+                    await dbContextTransaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("A database error has occured", ex);
+                }
+            }
+
+            
 
             return CreatedAtAction("GetStore", new { id = store.id }, store);
         }
+
 
         // DELETE: api/Stores/5
         [HttpDelete("{id}")]

@@ -10,9 +10,12 @@ using AutoMapper;
 using Appointments_Express_Backend.DTO.Responses;
 using Appointments_Express_Backend.Services;
 using Appointments_Express_Backend.DTO.Requests;
+using Appointments_Express_Backend.AuthenticationManager;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -20,18 +23,21 @@ namespace Appointments_Express_Backend.Controllers.api
         private readonly AppointmentDBContext _context;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly IJwtAuthenticationManager _jwtAuthenticationManager;
 
-        public UsersController(AppointmentDBContext context, IMapper mapper, IUserService userService)
+        public UsersController(AppointmentDBContext context, IMapper mapper, IUserService userService, IJwtAuthenticationManager jwtAuthenticationManager)
         {
             _context = context;
             _userService = userService;
             _mapper = mapper;
+            _jwtAuthenticationManager = jwtAuthenticationManager;
         }
 
 
         // POST: api/Users/register
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register([FromBody] User user)
         {
@@ -43,20 +49,22 @@ namespace Appointments_Express_Backend.Controllers.api
         }
 
         // POST: api/Users/login
+        [AllowAnonymous]
         [HttpPost("login")]
-        public LoginResponse Login([FromBody] LoginRequest loginRequest)
+        public ActionResult<LoginResponse> Login([FromBody] LoginRequest loginRequest)
         {
             var user = _userService.Login(loginRequest.username, loginRequest.password);
             if (user == null)
             {
-                return new LoginResponse { errors = "Invalid credentials" };
+                return NotFound(new LoginResponse { errors = "A user with those credentials was not found." });
             }
            
-            return new LoginSuccessResponse { token = "token here"/*JwtManager.GenerateToken(user.username)*/, user = _mapper.Map<UserResponse>(user) };
+            return Ok(new LoginSuccessResponse { token = _jwtAuthenticationManager.Authenticate(user), user = _mapper.Map<UserResponse>(user) });
             
         } 
 
         // GET: api/Users
+        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
