@@ -34,6 +34,7 @@ namespace Appointments_Express_Backend.Controllers.api
 
         // GET: api/Stores/5
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Store>> GetStore(int id)
         {
             var store = await _context.Stores.FindAsync(id);

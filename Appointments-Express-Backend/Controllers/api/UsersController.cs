@@ -135,6 +135,31 @@ namespace Appointments_Express_Backend.Controllers.api
             return user;
         }
 
+
+        [HttpGet("appointmanager/{storeId}/{username}")]
+        public async Task<IActionResult> AppointManager([FromRoute] int storeId, [FromRoute] string username)
+        {
+            var userIdString = Authorization.GetUserId(User);
+
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+
+            var ownerId = int.Parse(userIdString);
+            var owner = await _context.Users.FindAsync(ownerId);
+            var manager = await _context.Users.FirstOrDefaultAsync(u => u.username == username);
+            var store = await _context.Stores.FindAsync(storeId);
+
+            if (owner == null) return BadRequest(new { errors = "Owner not found" });
+            if (manager == null) return BadRequest(new { errors = "New manager not found" });
+            if (store == null) return BadRequest(new { errors = "Store not found" });
+            if (_context.UserStoreRoles.FirstOrDefaultAsync(usr => usr.userId == manager.id && usr.storeId == storeId) != null) return BadRequest(new { error = "User already is assigned a role to that store" });
+
+
+            return Ok();
+
+
+
+        }
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.id == id);
