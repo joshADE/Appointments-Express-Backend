@@ -148,11 +148,17 @@ namespace Appointments_Express_Backend.Controllers.api
             var manager = await _context.Users.FirstOrDefaultAsync(u => u.username == username);
             var store = await _context.Stores.FindAsync(storeId);
 
-            if (owner == null) return BadRequest(new { errors = "Owner not found" });
-            if (manager == null) return BadRequest(new { errors = "New manager not found" });
-            if (store == null) return BadRequest(new { errors = "Store not found" });
-            if (_context.UserStoreRoles.FirstOrDefaultAsync(usr => usr.userId == manager.id && usr.storeId == storeId) != null) return BadRequest(new { error = "User already is assigned a role to that store" });
+            if (owner == null) return NotFound(new { errors = "Owner not found" });
+            if (manager == null) return NotFound(new { errors = "New manager not found" });
+            if (store == null) return NotFound(new { errors = "Store not found" });
+            if (!Authorization.UserHasPermission(_context, ownerId, storeId, "Assign Managers")) return Unauthorized(new { errors = "User not authorized to assign managers for this store" });
+            if (await _context.UserStoreRoles.FirstOrDefaultAsync(usr => usr.userId == manager.id && usr.storeId == storeId) != null) return BadRequest(new { errors = "User already is assigned a role to that store" });
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.name == "Manager");
+            if (role == null) return StatusCode(StatusCodes.Status500InternalServerError, new { errors = "There was an error in the DB" });
 
+
+            _context.UserStoreRoles.Add(new UserStoreRole { userId = manager.id, storeId = storeId, roleId = role.id });
+            await _context.SaveChangesAsync();
 
             return Ok();
 
