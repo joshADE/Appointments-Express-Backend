@@ -9,6 +9,12 @@ namespace Appointments_Express_Backend.Models
 {
     public class Store
     {
+
+        public Store()
+        {
+            isQuickProfile = false;
+        }
+
         [Key]
         public int id { get; set; }
 
@@ -25,6 +31,8 @@ namespace Appointments_Express_Backend.Models
 
         [Required]
         public int maxTimeBlock { get; set; }
+
+        public bool isQuickProfile { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }

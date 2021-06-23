@@ -9,9 +9,15 @@ namespace Appointments_Express_Backend.Models
 {
     public class StoreHours
     {
+        public StoreHours()
+        {
+            isOpen = true;
+        }
         public int storeId { get; set; }
 
         public int dayOfWeek { get; set; }
+
+        public bool isOpen { get; set; }
 
         [Required]
         public TimeSpan open { get; set; }
