@@ -39,13 +39,13 @@ namespace Appointments_Express_Backend.Controllers.api
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<ActionResult<User>> Register([FromBody] User user)
+        public async Task<ActionResult<UserResponse>> Register([FromBody] User user)
         {
             user = _userService.Register(user);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.id }, user);
+            return CreatedAtAction("GetUser", new { id = user.id }, _mapper.Map<UserResponse>(user));
         }
 
         // POST: api/Users/login
@@ -64,19 +64,37 @@ namespace Appointments_Express_Backend.Controllers.api
         } 
 
         // GET: api/Users
-        
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserResponse>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            return _mapper.Map<List<UserResponse>>(await _context.Users.ToListAsync());
         }
 
-        
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        // GET: api/Users/loadUser
+        [HttpGet("loadUser")]
+        public async Task<ActionResult<UserResponse>> LoadUser()
         {
-            var user = await _context.Users.FindAsync(id);
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+
+            var user = _mapper.Map<UserResponse>(await _context.Users.FindAsync(int.Parse(userIdString)));
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return user;
+        }
+
+
+        // GET: api/Users/5
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserResponse>> GetUser(int id)
+        {
+            var user = _mapper.Map<UserResponse>(await _context.Users.FindAsync(id));
 
             if (user == null)
             {
@@ -121,7 +139,7 @@ namespace Appointments_Express_Backend.Controllers.api
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<User>> DeleteUser(int id)
+        public async Task<ActionResult<UserResponse>> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
@@ -132,11 +150,11 @@ namespace Appointments_Express_Backend.Controllers.api
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            return user;
+            return _mapper.Map<UserResponse>(user);
         }
 
 
-        [HttpGet("appointmanager/{storeId}/{username}")]
+        [HttpPost("appointmanager/{storeId}/{username}")]
         public async Task<IActionResult> AppointManager([FromRoute] int storeId, [FromRoute] string username)
         {
             var userIdString = Authorization.GetUserId(User);
