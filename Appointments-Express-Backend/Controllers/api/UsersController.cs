@@ -170,6 +170,7 @@ namespace Appointments_Express_Backend.Controllers.api
             if (manager == null) return NotFound(new { errors = "New manager not found" });
             if (store == null) return NotFound(new { errors = "Store not found" });
             if (!Authorization.UserHasPermission(_context, ownerId, storeId, "Assign Managers")) return Unauthorized(new { errors = "User not authorized to assign managers for this store" });
+            if (await _context.Stores.FirstOrDefaultAsync(s => s.id == storeId && s.isQuickProfile) != null) return BadRequest(new { errors = "Cannot assign manager role to that store (quick profile)" });
             if (await _context.UserStoreRoles.FirstOrDefaultAsync(usr => usr.userId == manager.id && usr.storeId == storeId) != null) return BadRequest(new { errors = "User already is assigned a role to that store" });
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.name == "Manager");
             if (role == null) return StatusCode(StatusCodes.Status500InternalServerError, new { errors = "There was an error in the DB" });

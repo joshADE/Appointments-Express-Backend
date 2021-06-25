@@ -141,6 +141,14 @@ namespace Appointments_Express_Backend.Controllers.api
             //return Unauthorized();
             //}
 
+            var userId = int.Parse(userIdString);
+            if (store.isQuickProfile)
+            {
+                var userHasQuickProfile = await _context.UserStoreRoles.Include(usr => usr.store).AnyAsync(usr => usr.userId == userId && usr.store.isQuickProfile);
+                // a user can only have one quick profile in the DB
+                if (userHasQuickProfile)
+                    return BadRequest(new { errors = "User only allowed one quick profile" });
+            }
 
             using (var dbContextTransaction = _context.Database.BeginTransaction())
             {
@@ -149,7 +157,7 @@ namespace Appointments_Express_Backend.Controllers.api
                     _context.Stores.Add(store);
                     await _context.SaveChangesAsync();
 
-                    _context.UserStoreRoles.Add(new UserStoreRole { userId = int.Parse(userIdString), storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
+                    _context.UserStoreRoles.Add(new UserStoreRole { userId = userId, storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
                     await _context.SaveChangesAsync();
 
                     await dbContextTransaction.CommitAsync();
