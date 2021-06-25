@@ -9,6 +9,8 @@ using Appointments_Express_Backend.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Authorization;
 using Appointments_Express_Backend.AuthenticationManager;
+using Appointments_Express_Backend.DTO.Responses;
+using AutoMapper;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -18,10 +20,12 @@ namespace Appointments_Express_Backend.Controllers.api
     public class StoresController : ControllerBase
     {
         private readonly AppointmentDBContext _context;
+        private readonly IMapper _mapper;
 
-        public StoresController(AppointmentDBContext context)
+        public StoresController(AppointmentDBContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Stores
@@ -130,12 +134,11 @@ namespace Appointments_Express_Backend.Controllers.api
         [HttpPost("createstore")]
         public async Task<ActionResult<Store>> CreateStore(Store store)
         {
-            var userId = Authorization.GetUserId(User);
-            if (userId == null)
-                return NotFound();
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
 
             //if(!Authorization.UserHasPermission(_context, int.Parse(userId), store.id, "Create Store")){  // Create Store Permission Doesn't actually exist in DB
-                //return Unauthorized();
+            //return Unauthorized();
             //}
 
 
@@ -146,7 +149,7 @@ namespace Appointments_Express_Backend.Controllers.api
                     _context.Stores.Add(store);
                     await _context.SaveChangesAsync();
 
-                    _context.UserStoreRoles.Add(new UserStoreRole { userId = int.Parse(userId), storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
+                    _context.UserStoreRoles.Add(new UserStoreRole { userId = int.Parse(userIdString), storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
                     await _context.SaveChangesAsync();
 
                     await dbContextTransaction.CommitAsync();
@@ -162,6 +165,29 @@ namespace Appointments_Express_Backend.Controllers.api
             return CreatedAtAction("GetStore", new { id = store.id }, store);
         }
 
+        [HttpGet("userstores")]
+        public async Task<ActionResult<IEnumerable<UserStoreResponse>>> GetUserStores()
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var listOfUserStoresWithRole = await _context.UserStoreRoles.Where(usr => usr.userId == userId).Include(usr => usr.store).Include(usr => usr.role).Select(usr =>
+              new UserStoreResponse { 
+                  id = usr.store.id, 
+                  name = usr.store.name, 
+                  location = usr.store.location, 
+                  minTimeBlock = usr.store.minTimeBlock, 
+                  maxTimeBlock = usr.store.maxTimeBlock, 
+                  createdAt = usr.store.createdAt, 
+                  isQuickProfile = usr.store.isQuickProfile, 
+                  role = usr.role.name 
+              }
+           ).ToListAsync();
+
+            return listOfUserStoresWithRole;
+            
+        }
 
         // DELETE: api/Stores/5
         [HttpDelete("{id}")]

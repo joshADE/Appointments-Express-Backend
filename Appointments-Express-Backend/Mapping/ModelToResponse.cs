@@ -13,6 +13,8 @@ namespace Appointments_Express_Backend.Mapping
         public ModelToResponse()
         {
             CreateMap<User, UserResponse>();
+
+            CreateMap<Store, UserStoreResponse>();
         }
     }
 }
