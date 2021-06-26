@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Appointments_Express_Backend.AuthenticationManager;
 using Appointments_Express_Backend.DTO.Responses;
 using AutoMapper;
+using Appointments_Express_Backend.DTO.Requests;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -132,7 +133,7 @@ namespace Appointments_Express_Backend.Controllers.api
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost("createstore")]
-        public async Task<ActionResult<Store>> CreateStore(Store store)
+        public async Task<ActionResult<Store>> CreateStore([FromBody] CreateStoreRequest createStoreRequest)
         {
             var userIdString = Authorization.GetUserId(User);
             if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
@@ -140,7 +141,7 @@ namespace Appointments_Express_Backend.Controllers.api
             //if(!Authorization.UserHasPermission(_context, int.Parse(userId), store.id, "Create Store")){  // Create Store Permission Doesn't actually exist in DB
             //return Unauthorized();
             //}
-
+            var store = createStoreRequest.store;
             var userId = int.Parse(userIdString);
             if (store.isQuickProfile)
             {
@@ -160,6 +161,19 @@ namespace Appointments_Express_Backend.Controllers.api
                     _context.UserStoreRoles.Add(new UserStoreRole { userId = userId, storeId = store.id, roleId = _context.Roles.FirstOrDefault(r => r.name == "Owner").id });
                     await _context.SaveChangesAsync();
 
+                    foreach (var storeHours in createStoreRequest.storeHours) {
+                        storeHours.storeId = store.id;
+                        _context.StoreHours.Add(storeHours);
+                    }
+
+                    foreach (var closed in createStoreRequest.closedDaysTimes)
+                    {
+                        closed.storeId = store.id;
+                        _context.ClosedDaysTimes.Add(closed);
+                    }
+                    await _context.SaveChangesAsync();
+
+
                     await dbContextTransaction.CommitAsync();
                 }
                 catch (Exception ex)
@@ -168,9 +182,9 @@ namespace Appointments_Express_Backend.Controllers.api
                 }
             }
 
-            
+            var fullStoreDetails = await FindUserStoreById(userId, store.id);
 
-            return CreatedAtAction("GetStore", new { id = store.id }, store);
+            return CreatedAtAction("GetUserStore", new { id = store.id }, fullStoreDetails);
         }
 
         [HttpGet("userstores")]
@@ -181,20 +195,49 @@ namespace Appointments_Express_Backend.Controllers.api
             var userId = int.Parse(userIdString);
 
             var listOfUserStoresWithRole = await _context.UserStoreRoles.Where(usr => usr.userId == userId).Include(usr => usr.store).Include(usr => usr.role).Select(usr =>
-              new UserStoreResponse { 
-                  id = usr.store.id, 
-                  name = usr.store.name, 
-                  location = usr.store.location, 
-                  minTimeBlock = usr.store.minTimeBlock, 
-                  maxTimeBlock = usr.store.maxTimeBlock, 
-                  createdAt = usr.store.createdAt, 
-                  isQuickProfile = usr.store.isQuickProfile, 
-                  role = usr.role.name 
+              new UserStoreResponse {
+                  store = usr.store,
+                  role = usr.role,
+                  storeHours = _context.StoreHours.Where(sh => sh.storeId == usr.storeId).ToList(),
+                  closedDaysTimes = _context.ClosedDaysTimes.Where(cdt => cdt.storeId == usr.storeId).ToList()
               }
            ).ToListAsync();
 
             return listOfUserStoresWithRole;
             
+        }
+
+        // GET: api/Stores/userstores/5
+        [HttpGet("userstores/{id}")]
+        public async Task<ActionResult<UserStoreResponse>> GetUserStore(int id)
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var userStoreWithRole = await FindUserStoreById(userId, id);
+
+            if (userStoreWithRole == null)
+            {
+                return NotFound();
+            }
+
+
+            return userStoreWithRole;
+        }
+
+        private async Task<UserStoreResponse> FindUserStoreById(int userId, int storeId)
+        {
+            var userStoreWithRole = await _context.UserStoreRoles.Where(usr => usr.userId == userId && usr.storeId == storeId).Include(usr => usr.store).Include(usr => usr.role).Select(usr =>
+              new UserStoreResponse
+              {
+                  store = usr.store,
+                  role = usr.role,
+                  storeHours = _context.StoreHours.Where(sh => sh.storeId == storeId).ToList(),
+                  closedDaysTimes = _context.ClosedDaysTimes.Where(cdt => cdt.storeId == storeId).ToList()
+              }
+           ).FirstOrDefaultAsync();
+            return userStoreWithRole;
         }
 
         // DELETE: api/Stores/5
