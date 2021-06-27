@@ -21,8 +21,9 @@ namespace Appointments_Express_Backend.Services
 
         public User Login(string username, string password)
         {
-            var user = _context.Users.SingleOrDefault(u => u.username == username);
-            if (user == null) throw new System.Web.Http.HttpResponseException(System.Net.HttpStatusCode.NotFound);
+            username = username.ToLower();
+            var user = _context.Users.FirstOrDefault(u => u.username == username);
+            if (user == null) return null;
             bool isValidPassword = BCrypt.Net.BCrypt.Verify(password, user.password);
 
             if (isValidPassword)
@@ -35,6 +36,8 @@ namespace Appointments_Express_Backend.Services
 
         public User Register(User oUser)
         {
+            oUser.username = oUser.username.ToLower();
+            oUser.email = oUser.email.ToLower();
             oUser.password = BCrypt.Net.BCrypt.HashPassword(oUser.password);
             // TODO: Should add the user in the database here
             return oUser;
