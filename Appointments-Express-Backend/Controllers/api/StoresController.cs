@@ -99,13 +99,19 @@ namespace Appointments_Express_Backend.Controllers.api
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchStore(int id, [FromBody] JsonPatchDocument<Store> jsonPatch)
         {
-
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
 
             var entity = await _context.Stores.FindAsync(id);
 
             if (entity == null)
             {
                 return NotFound();
+            }
+
+            if(!Authorization.UserHasPermission(_context, userId, entity.id, "Edit Store Details")){
+                return Unauthorized();
             }
 
             jsonPatch.ApplyTo(entity);
@@ -125,8 +131,8 @@ namespace Appointments_Express_Backend.Controllers.api
                     throw;
                 }
             }
-
-            return Ok(entity);
+            var storeResult = await FindUserStoreById(userId, entity.id);
+            return Ok(storeResult);
         }
 
         // POST: api/Stores/createstore
