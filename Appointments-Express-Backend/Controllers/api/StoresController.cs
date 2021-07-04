@@ -94,6 +94,51 @@ namespace Appointments_Express_Backend.Controllers.api
             return NoContent();
         }
 
+        // PUT: api/Stores/hours/5
+        [HttpPut("hours/{id}")]
+        public async Task<IActionResult> PutStoreHours([FromRoute]int id, [FromBody]StoreHours[] hours)
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var entity = await _context.Stores.FindAsync(id);
+
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            if (!Authorization.UserHasPermission(_context, userId, entity.id, "Edit Store Hours"))
+            {
+                return Unauthorized();
+            }
+
+            if (hours.Any(times => times.storeId != id))
+            {
+                return Unauthorized();
+            }
+
+            _context.StoreHours.UpdateRange(hours);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StoreExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            var storeResult = await FindUserStoreById(userId, id);
+            return Ok(storeResult);
+        }
 
         // PATCH: api/Stores/5
         [HttpPatch("{id}")]
