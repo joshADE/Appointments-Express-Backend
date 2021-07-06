@@ -140,6 +140,57 @@ namespace Appointments_Express_Backend.Controllers.api
             return Ok(storeResult);
         }
 
+
+        // PUT: api/Stores/closed/5
+        [HttpPut("closed/{id}")]
+        public async Task<IActionResult> PutStoreClosedDaysAndTimes([FromRoute] int id, [FromBody] UpdateClosedRequest updateClosedRequest)
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var entity = await _context.Stores.FindAsync(id);
+
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            if (!Authorization.UserHasPermission(_context, userId, entity.id, "Edit Closed Times"))
+            {
+                return Unauthorized();
+            }
+
+            if (updateClosedRequest.toUpdate.Any(times => times.storeId != id) || updateClosedRequest.toRemove.Any(times => times.storeId != id))
+            {
+                return Unauthorized();
+            }
+            foreach (var closed in updateClosedRequest.toAdd)
+                closed.storeId = id;
+            _context.ClosedDaysTimes.AddRange(updateClosedRequest.toAdd);
+
+            _context.ClosedDaysTimes.UpdateRange(updateClosedRequest.toUpdate);
+
+            _context.ClosedDaysTimes.RemoveRange(updateClosedRequest.toRemove);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StoreExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            var storeResult = await FindUserStoreById(userId, id);
+            return Ok(storeResult);
+        }
         // PATCH: api/Stores/5
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchStore(int id, [FromBody] JsonPatchDocument<Store> jsonPatch)
