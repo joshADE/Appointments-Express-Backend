@@ -49,7 +49,7 @@ Example:
 1. Build the project by navigating to Build > Build Solution and make sure that there are no errors.
 2. Press the green play button (IIS Express)
 
-Open up https://localhost:44371/api/stores in a browser to see the app. (There should be no stores yet in the database, but you can connect the app to the front-end linked above).
+Open up https://localhost:44371/api/stores in a browser to see the app. (There should be no stores yet in the database, but you can connect the app to the front-end linked above). You can also visit https://localhost:44371/swagger to see list of all the endpoints and interact with them. (Note that you will not be allowed to interact with most of the endpoints as they require an authentication token header added to the request and swagger UI doesn't allow this).
 
 # Deploying to Heroku
 
