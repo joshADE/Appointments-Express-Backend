@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Appointments_Express_Backend.AuthenticationManager;
@@ -18,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace Appointments_Express_Backend
 {
@@ -99,6 +102,28 @@ namespace Appointments_Express_Backend
                 // or from the environment variable from Heroku, use it to set up your DbContext.
                 options.UseNpgsql(connStr);
             });
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { 
+                    Title = "Appointments API", 
+                    Version = "v1",
+                    Description = "An API to manage appointment bookings",
+                    TermsOfService = new Uri("https://CompanysWebsite.com/"),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Josh A",
+                        Email = string.Empty,
+                        Url = new Uri("https://github.com/joshADE")
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "Use under MY Company Licence",
+                        Url = new Uri("https://CompanysWebsite.com/"),
+                    }
+
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -116,6 +141,13 @@ namespace Appointments_Express_Backend
             }
 
             app.UseHttpsRedirection();
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Appointments API V1");
+            });
 
             app.UseRouting();
 
