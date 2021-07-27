@@ -58,7 +58,7 @@ Open up https://localhost:44371/api/stores in a browser to see the app. (There s
 1. Make sure you know how to create a heroku app and deploy the files from your local machine over to the app. There are several videos on how to do this online, and I don't want to list the instruction here.
 2. Heroku doesn't officially support .NET applications, but there is a buildpack that allows you to get the applications running on Heroku. The buildpack we will be using is https://github.com/jincod/dotnetcore-buildpack.
 3. When you create a heroku app navigate to the settings tab and scroll to the section on buildpacks and add a new buildpack, setting the url of the buildpack to `` https://github.com/jincod/dotnetcore-buildpack ``.
-4. While you on the settings tab scroll to the config vars section and add a config variable with the key of `` ASPNETCORE_ENVIRONMENT `` and a value of `` Production ``.
+4. While you are on the settings tab, scroll to the config vars section and add a config variable with the key of `` ASPNETCORE_ENVIRONMENT `` and a value of `` Production ``.
 5. Next is to add the heroku postgresql addon to the app. Navigate to the resources tab and in the add-ons section, search for the Heroku Postgres addon and add it to your app (it should be free).
 6. Once you add the Postgres add-on to the app it should add another config variable called DATABASE_URL, which is used to get the connection string for the postgresql database.
 7. I've already setup the necessary code to automatically detect that the app is in production and create the connection string to connect to the Postgres database on Heroku and also run the necessary migrations on the database to keep it up to date.
