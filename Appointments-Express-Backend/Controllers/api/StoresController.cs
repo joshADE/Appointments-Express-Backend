@@ -346,10 +346,19 @@ namespace Appointments_Express_Backend.Controllers.api
         [HttpDelete("{id}")]
         public async Task<ActionResult<Store>> DeleteStore(int id)
         {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+            
             var store = await _context.Stores.FindAsync(id);
             if (store == null)
             {
                 return NotFound();
+            }
+
+            if (!Authorization.UserHasPermission(_context, userId, store.id, "Delete Store"))
+            {
+                return Unauthorized();
             }
 
             _context.Stores.Remove(store);
