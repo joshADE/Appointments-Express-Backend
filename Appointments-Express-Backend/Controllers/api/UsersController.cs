@@ -185,6 +185,25 @@ namespace Appointments_Express_Backend.Controllers.api
 
         }
 
+        [AllowAnonymous]
+        [HttpGet("usersandrolesforstore/{storeId}")]
+        public async Task<ActionResult<IEnumerable<UserAndRoleForStoreResponse>>> GetUsersAndRolesForStore([FromRoute] int storeId)
+        {
+            var usersAndRoles = _context.UserStoreRoles.Where(usr => usr.storeId == storeId)
+                .Include(usr => usr.role)
+                .Include(usr => usr.user)
+                .Include(usr => usr.store).Select(usr => new UserAndRoleForStoreResponse
+                {
+                    user = _mapper.Map<UserResponse>(usr.user),
+                    createdAt = usr.createdAt,
+                    store = usr.store,
+                    role = usr.role
+                });
+
+            
+            return await usersAndRoles.ToListAsync();
+        }
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.id == id);
