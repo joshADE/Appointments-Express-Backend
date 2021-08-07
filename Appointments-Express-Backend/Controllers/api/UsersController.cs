@@ -12,6 +12,8 @@ using Appointments_Express_Backend.Services;
 using Appointments_Express_Backend.DTO.Requests;
 using Appointments_Express_Backend.AuthenticationManager;
 using Microsoft.AspNetCore.Authorization;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -20,17 +22,20 @@ namespace Appointments_Express_Backend.Controllers.api
     [ApiController]
     public class UsersController : ControllerBase
     {
+        private const string Tags = "backend_User_Photo";
         private readonly AppointmentDBContext _context;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IJwtAuthenticationManager _jwtAuthenticationManager;
+        private readonly Cloudinary _cloudinary;
 
-        public UsersController(AppointmentDBContext context, IMapper mapper, IUserService userService, IJwtAuthenticationManager jwtAuthenticationManager)
+        public UsersController(AppointmentDBContext context, IMapper mapper, IUserService userService, IJwtAuthenticationManager jwtAuthenticationManager, Cloudinary cloudinary)
         {
             _context = context;
             _userService = userService;
             _mapper = mapper;
             _jwtAuthenticationManager = jwtAuthenticationManager;
+            _cloudinary = cloudinary;
         }
 
 
@@ -39,9 +44,24 @@ namespace Appointments_Express_Backend.Controllers.api
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<ActionResult<UserResponse>> Register([FromBody] User user)
+        public async Task<ActionResult<UserResponse>> Register([FromForm] RegisterRequest request)
         {
+            User user = _mapper.Map<User>(request);
             user = _userService.Register(user);
+
+            // taken from https://github.com/cloudinary/CloudinaryDotNet/blob/master/samples/PhotoAlbum/Pages/Upload.cshtml.cs
+            if (request.avatar != null)
+            {
+                var result = await _cloudinary.UploadAsync(new ImageUploadParams
+                {
+                    File = new FileDescription(request.avatar.FileName, request.avatar.OpenReadStream()),
+                    Tags = Tags
+                }).ConfigureAwait(false);
+
+                user.avatarPublicId = result.PublicId;
+                user.avatarUrl = result.SecureUrl.AbsoluteUri;
+            }
+            //user.createdAt = DateTime.Now;
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 

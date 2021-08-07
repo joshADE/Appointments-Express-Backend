@@ -12,6 +12,8 @@ namespace Appointments_Express_Backend.DTO.Responses
         public string lastName { get; set; }
         public string username { get; set; }
         public string email { get; set; }
+        public string avatarPublicId { get; set; }
+        public string avatarUrl { get; set; }
         public DateTime createdAt { get; set; }
     }
 }

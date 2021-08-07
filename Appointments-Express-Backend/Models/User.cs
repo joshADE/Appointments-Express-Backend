@@ -30,6 +30,9 @@ namespace Appointments_Express_Backend.Models
         [Required]
         public string email { get; set; }
 
+        public string? avatarPublicId { get; set; }
+        public string? avatarUrl { get; set; } 
+
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime createdAt { get; set; }
 

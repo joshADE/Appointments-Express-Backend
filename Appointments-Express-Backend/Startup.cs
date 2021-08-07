@@ -21,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using CloudinaryDotNet;
 
 namespace Appointments_Express_Backend
 {
@@ -41,6 +42,31 @@ namespace Appointments_Express_Backend
 
             // Application Services
             services.AddScoped<IUserService, UserService>();
+
+            // Cloudinary
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            string cloudName = null;
+            string apiKey = null;
+            string apiSecret = null;
+
+            if (env == "Development")
+            {
+                cloudName = Configuration.GetValue<string>("AccountSettings:CloudName");
+                apiKey = Configuration.GetValue<string>("AccountSettings:ApiKey");
+                apiSecret = Configuration.GetValue<string>("AccountSettings:ApiSecret");
+            } else
+            {
+                cloudName = Environment.GetEnvironmentVariable("CloudName");
+                apiKey = Environment.GetEnvironmentVariable("ApiKey");
+                apiSecret = Environment.GetEnvironmentVariable("ApiSecret");
+            }
+
+            if (new[] { cloudName, apiKey, apiSecret }.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException("Please specify Cloudinary account details!");
+            }
+
+            services.AddSingleton(new Cloudinary(new Account(cloudName, apiKey, apiSecret)));
 
 
             // Jwt Authentication Management
