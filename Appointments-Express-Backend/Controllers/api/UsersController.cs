@@ -175,7 +175,7 @@ namespace Appointments_Express_Backend.Controllers.api
 
 
         [HttpPost("appoint/{role}/{storeId}/{username}")]
-        public async Task<IActionResult> AppointManager([FromRoute] string role, [FromRoute] int storeId, [FromRoute] string username)
+        public async Task<IActionResult> AppointRole([FromRoute] string role, [FromRoute] int storeId, [FromRoute] string username)
         {
             var userIdString = Authorization.GetUserId(User);
 
@@ -199,6 +199,41 @@ namespace Appointments_Express_Backend.Controllers.api
 
 
             _context.UserStoreRoles.Add(new UserStoreRole { userId = appointee.id, storeId = storeId, roleId = roleFromDB.id });
+            await _context.SaveChangesAsync();
+
+            return Ok();
+
+
+
+        }
+
+        [HttpPost("unappoint/{role}/{storeId}/{username}")]
+        public async Task<IActionResult> UnappointRole([FromRoute] string role, [FromRoute] int storeId, [FromRoute] string username)
+        {
+            var userIdString = Authorization.GetUserId(User);
+
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+
+            var roleFromDB = await _context.Roles.FirstOrDefaultAsync(r => r.name == role);
+            if (roleFromDB == null) return NotFound(new { errors = "Role not found" });
+
+            var userId = int.Parse(userIdString);
+            var appointer = await _context.Users.FindAsync(userId);
+            var appointee = await _context.Users.FirstOrDefaultAsync(u => u.username == username);
+            var store = await _context.Stores.FindAsync(storeId);
+
+            if (appointer == null) return NotFound(new { errors = "User not found" });
+            if (appointee == null) return NotFound(new { errors = $"Appointed {role} not found" });
+            if (store == null) return NotFound(new { errors = "Store not found" });
+            if (!Authorization.UserHasPermission(_context, userId, storeId, $"Assign {role}s")) return Unauthorized(new { errors = $"User not authorized to un assign {role} role for this store" });
+            if (await _context.Stores.FirstOrDefaultAsync(s => s.id == storeId && s.isQuickProfile) != null) return BadRequest(new { errors = $"Cannot de assign {role} role to that store (quick profile)" });
+
+            var userStoreRole = await _context.UserStoreRoles.FirstOrDefaultAsync(usr => usr.userId == appointee.id && usr.storeId == storeId && usr.roleId == roleFromDB.id);
+
+            if (userStoreRole == null) return BadRequest(new { errors = $"User not assigned {role} role to that store" });
+
+
+            _context.UserStoreRoles.Remove(userStoreRole);
             await _context.SaveChangesAsync();
 
             return Ok();
