@@ -42,5 +42,14 @@ namespace Appointments_Express_Backend.Services
             // TODO: Should add the user in the database here
             return oUser;
         }
+
+        public User EditAccount(User oUser)
+        {
+            oUser.username = oUser.username.ToLower();
+            oUser.email = oUser.email.ToLower();
+            oUser.password = BCrypt.Net.BCrypt.HashPassword(oUser.password);
+            // TODO: Should add the user in the database here
+            return oUser;
+        }
     }
 }

@@ -8,12 +8,11 @@ using System.Threading.Tasks;
 
 namespace Appointments_Express_Backend.Mapping
 {
-    public class RequestToModel : Profile
+    public class ModelToRequest : Profile
     {
-        public RequestToModel()
+        public ModelToRequest()
         {
-            CreateMap<RegisterRequest, User>();
-            CreateMap<EditAccountRequest, User>();
+            CreateMap<User, EditAccountRequest>();
         }
     }
 }

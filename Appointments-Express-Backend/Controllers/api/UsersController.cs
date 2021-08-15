@@ -14,6 +14,7 @@ using Appointments_Express_Backend.AuthenticationManager;
 using Microsoft.AspNetCore.Authorization;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -240,6 +241,47 @@ namespace Appointments_Express_Backend.Controllers.api
 
 
 
+        }
+
+        [HttpPatch("editaccount")]
+        public async Task<IActionResult> EditAccount([FromBody] JsonPatchDocument<EditAccountRequest> jsonPatch)
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var userDatabase = await _context.Users.FindAsync(userId);
+
+            if (userDatabase == null)
+            {
+                return NotFound();
+            }
+
+            EditAccountRequest userDTO = _mapper.Map<EditAccountRequest>(userDatabase);
+
+            jsonPatch.ApplyTo(userDTO);
+
+            _mapper.Map(userDTO, userDatabase);
+
+            userDatabase = _userService.EditAccount(userDatabase);
+            _context.Entry(userDatabase).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(userId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            
+            return Ok(_mapper.Map<UserResponse>(userDatabase));
         }
 
         [AllowAnonymous]

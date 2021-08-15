@@ -12,6 +12,8 @@ namespace Appointments_Express_Backend.Services
 
         User Login(string username, string password);
 
+        User EditAccount(User oUser);
+
         List<User> GetAllUsers();
     }
 }
