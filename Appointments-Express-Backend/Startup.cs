@@ -22,6 +22,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using CloudinaryDotNet;
+using AutoMapper;
+using Appointments_Express_Backend.Mapping;
 
 namespace Appointments_Express_Backend
 {
@@ -38,7 +40,16 @@ namespace Appointments_Express_Backend
         public void ConfigureServices(IServiceCollection services)
         {
             // AutoMapper
-            services.AddAutoMapper(typeof(Startup));
+            //services.AddAutoMapper(typeof(Startup));
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new RequestToModel());
+                mc.AddProfile(new ModelToResponse());
+                mc.AddProfile(new ModelToRequest());
+            });
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
 
             // Application Services
             services.AddScoped<IUserService, UserService>();

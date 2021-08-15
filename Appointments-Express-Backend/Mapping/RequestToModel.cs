@@ -13,7 +13,8 @@ namespace Appointments_Express_Backend.Mapping
         public RequestToModel()
         {
             CreateMap<RegisterRequest, User>();
-            CreateMap<EditAccountRequest, User>();
+            CreateMap<EditAccountRequest, User>()
+                .ForAllMembers(opt => opt.Condition((src, des, srcMember) => srcMember != null));
         }
     }
 }

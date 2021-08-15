@@ -18,6 +18,5 @@ namespace Appointments_Express_Backend.DTO.Requests
 
         public string email { get; set; }
 
-        public IFormFile avatar { get; set; }
     }
 }

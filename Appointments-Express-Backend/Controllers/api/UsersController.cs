@@ -257,13 +257,15 @@ namespace Appointments_Express_Backend.Controllers.api
                 return NotFound();
             }
 
-            EditAccountRequest userDTO = _mapper.Map<EditAccountRequest>(userDatabase);
+            EditAccountRequest userDTO = new EditAccountRequest();
 
             jsonPatch.ApplyTo(userDTO);
 
+            userDTO = _userService.EditAccount(userDTO);
+
             _mapper.Map(userDTO, userDatabase);
 
-            userDatabase = _userService.EditAccount(userDatabase);
+            
             _context.Entry(userDatabase).State = EntityState.Modified;
             try
             {

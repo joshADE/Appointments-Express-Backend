@@ -1,4 +1,5 @@
-﻿using Appointments_Express_Backend.Models;
+﻿using Appointments_Express_Backend.DTO.Requests;
+using Appointments_Express_Backend.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,11 +44,16 @@ namespace Appointments_Express_Backend.Services
             return oUser;
         }
 
-        public User EditAccount(User oUser)
+        public EditAccountRequest EditAccount(EditAccountRequest oUser)
         {
-            oUser.username = oUser.username.ToLower();
-            oUser.email = oUser.email.ToLower();
-            oUser.password = BCrypt.Net.BCrypt.HashPassword(oUser.password);
+            if (oUser.username != null)
+                oUser.username = oUser.username.ToLower();
+
+            if (oUser.email != null)
+                oUser.email = oUser.email.ToLower();
+
+            if (oUser.password != null)
+                oUser.password = BCrypt.Net.BCrypt.HashPassword(oUser.password);
             // TODO: Should add the user in the database here
             return oUser;
         }

@@ -1,4 +1,5 @@
-﻿using Appointments_Express_Backend.Models;
+﻿using Appointments_Express_Backend.DTO.Requests;
+using Appointments_Express_Backend.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace Appointments_Express_Backend.Services
 
         User Login(string username, string password);
 
-        User EditAccount(User oUser);
+        EditAccountRequest EditAccount(EditAccountRequest oUser);
 
         List<User> GetAllUsers();
     }
