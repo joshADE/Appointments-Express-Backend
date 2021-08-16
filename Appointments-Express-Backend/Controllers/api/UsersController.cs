@@ -243,6 +243,72 @@ namespace Appointments_Express_Backend.Controllers.api
 
         }
 
+        [HttpPatch("editavatar")]
+        public async Task<IActionResult> EditAvatar([FromForm] EditAvatarRequest request)
+        {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var userDatabase = await _context.Users.FindAsync(userId);
+
+            if (userDatabase == null)
+            {
+                return NotFound();
+            }
+
+            if (userDatabase.avatarPublicId != null)
+            {
+                var deletionParams = new DeletionParams(userDatabase.avatarPublicId)
+                {
+                    Invalidate = true
+                };
+                var deletionResult = await _cloudinary.DestroyAsync(deletionParams);
+
+                if (deletionResult.Result == "ok")
+                {
+                    userDatabase.avatarPublicId = null;
+                    userDatabase.avatarUrl = null;
+                }else
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, deletionResult.Result);
+                }
+            }
+
+            
+            if (request.avatar != null)
+            {
+                var result = await _cloudinary.UploadAsync(new ImageUploadParams
+                {
+                    File = new FileDescription(request.avatar.FileName, request.avatar.OpenReadStream()),
+                    Tags = Tags
+                }).ConfigureAwait(false);
+
+                userDatabase.avatarPublicId = result.PublicId;
+                userDatabase.avatarUrl = result.SecureUrl.AbsoluteUri;
+            }
+
+            
+            _context.Entry(userDatabase).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(userId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            
+            return Ok(_mapper.Map<UserResponse>(userDatabase));
+        }
+
         [HttpPatch("editaccount")]
         public async Task<IActionResult> EditAccount([FromBody] JsonPatchDocument<EditAccountRequest> jsonPatch)
         {
