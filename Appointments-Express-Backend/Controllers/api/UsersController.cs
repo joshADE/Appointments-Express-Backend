@@ -158,16 +158,41 @@ namespace Appointments_Express_Backend.Controllers.api
         }
 
 
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<UserResponse>> DeleteUser(int id)
+        // DELETE: api/Users/deleteaccount
+        [HttpDelete("deleteaccount")]
+        public async Task<ActionResult<UserResponse>> DeleteAccount()
         {
-            var user = await _context.Users.FindAsync(id);
+            var userIdString = Authorization.GetUserId(User);
+
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var user = await _context.Users.FindAsync(int.Parse(userIdString));
             if (user == null)
             {
                 return NotFound();
             }
 
+            // delete all stores owned by the user (will also delete all the tables with a foreign key of storeId)
+            var roleFromDB = await _context.Roles.FirstOrDefaultAsync(r => r.name == "Owner");
+            if (roleFromDB == null) return StatusCode(StatusCodes.Status500InternalServerError, new { errors = "Could not find store roles to delete user stores" });
+
+            var userOwnedStores = await _context.UserStoreRoles.Where(usr => usr.roleId == roleFromDB.id && usr.userId == user.id).Include(usr => usr.store).Select(usr => usr.store).ToListAsync();
+
+            _context.Stores.RemoveRange(userOwnedStores);
+
+            // delete the user's photo if it exist
+            if (user.avatarPublicId != null)
+            {
+                var deletionParams = new DeletionParams(user.avatarPublicId)
+                {
+                    Invalidate = true
+                };
+                var deletionResult = await _cloudinary.DestroyAsync(deletionParams);
+
+                // should check if the user's photo was actually deleted
+            }
+
+
+            // delete the user from the database
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
