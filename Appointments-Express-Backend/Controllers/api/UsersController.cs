@@ -48,7 +48,20 @@ namespace Appointments_Express_Backend.Controllers.api
         public async Task<ActionResult<UserResponse>> Register([FromForm] RegisterRequest request)
         {
             User user = _mapper.Map<User>(request);
+            // prepare the registration details (transforms the email/username to lowercase and hashes password)
             user = _userService.Register(user);
+
+            // check if the username and email already exist in the database (to prevent a unique constraint exception)
+
+            if (await _context.Users.AnyAsync(u => u.email == user.email))
+            {
+                return BadRequest(new { errors = "Email is already taken."});
+            }
+
+            if (await _context.Users.AnyAsync(u => u.username == user.username))
+            {
+                return BadRequest(new { errors = "Username is already taken." });
+            }
 
             // taken from https://github.com/cloudinary/CloudinaryDotNet/blob/master/samples/PhotoAlbum/Pages/Upload.cshtml.cs
             if (request.avatar != null)
@@ -353,6 +366,18 @@ namespace Appointments_Express_Backend.Controllers.api
             jsonPatch.ApplyTo(userDTO);
 
             userDTO = _userService.EditAccount(userDTO);
+
+            // check if the username and email already exist in the database (to prevent a unique constraint exception)
+
+            if (await _context.Users.AnyAsync(u => u.email == userDTO.email))
+            {
+                return BadRequest(new { errors = "Email is already taken." });
+            }
+
+            if (await _context.Users.AnyAsync(u => u.username == userDTO.username))
+            {
+                return BadRequest(new { errors = "Username is already taken." });
+            }
 
             _mapper.Map(userDTO, userDatabase);
 
