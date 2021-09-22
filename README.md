@@ -84,5 +84,6 @@ Open up https://localhost:44371/api/stores in a browser to see the app. (There s
 8. I've already setup the necessary code to automatically detect that the app is in production and create the connection string to connect to the Postgres database on Heroku and also run the necessary migrations on the database to keep it up to date.
 9. You can now deploy the app as you would a normal heroku app by following the instructions on the deploy tab in the heroku dashboard.
 
-
+# Diagrams
+![Database diagram](Screenshots/DBDiagram.png)
 
