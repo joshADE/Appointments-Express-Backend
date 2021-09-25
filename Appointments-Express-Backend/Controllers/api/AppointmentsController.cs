@@ -44,6 +44,13 @@ namespace Appointments_Express_Backend.Controllers.api
             return appointment;
         }
 
+        // GET: api/Appointments/storeappointments/5
+        [HttpGet("storeappointments/{storeId}")]
+        public async Task<ActionResult<IEnumerable<Appointment>>> GetStoreAppointments(int storeId)
+        {
+            return await _context.Appointments.Where(app => app.storeId == storeId).ToListAsync();
+        }
+
         // POST: api/Appointments
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
