@@ -328,6 +328,29 @@ namespace Appointments_Express_Backend.Controllers.api
             return userStoreWithRole;
         }
 
+        // GET: api/Stores/storeandtimes/5
+        [HttpGet("storeandtimes/{id}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<StoreAndTimesResponse>> GetStoreAndTimes(int id)
+        {
+
+            var store = await _context.Stores.FindAsync(id);
+
+            if (store == null)
+            {
+                return NotFound();
+            }
+
+            var storeDetails = new StoreAndTimesResponse
+            {
+                store = store,
+                storeHours = await _context.StoreHours.Where(sh => sh.storeId == id).ToListAsync(),
+                closedDaysTimes = await _context.ClosedDaysTimes.Where(cdt => cdt.storeId == id).ToListAsync()
+            };
+           
+            return storeDetails;
+        }
+
         private async Task<UserStoreResponse> FindUserStoreById(int userId, int storeId)
         {
             var userStoreWithRole = await _context.UserStoreRoles.Where(usr => usr.userId == userId && usr.storeId == storeId).Include(usr => usr.store).Include(usr => usr.role).Select(usr =>
