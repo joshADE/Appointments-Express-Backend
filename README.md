@@ -13,6 +13,7 @@
 * Visual Studio (version 2019 and above) (configured with the .NET package, community edition is fine) (go [here](https://visualstudio.microsoft.com/vs/features/net-development/) to install visual studio with .NET)
 * PostgreSQL (latest version would be fine) (click [here](https://www.postgresqltutorial.com/install-postgresql/) for installation instructions)
 * Cloudinary Account (with the cloud name, api key, and api secret) 
+* Gmail Account (You will need a gmail account just for sending emails from this application. I recommend that you create a new one. The account will need to be configured a bit to send emails from an application)
 
 # Getting Started
 
@@ -63,6 +64,26 @@ Example:
   }
 ```
 
+## Setup GMail Email Sending Account
+1. Create an new email account with google.
+2. Navigate to the security account settings for the google account. 
+3. Either (1) create an app password to use for this app (requires the 2-step verification to be turned on) or (2) turn on Less secure app access. You can follow the instructions of the answer on this stackoverflow thread https://stackoverflow.com/questions/32260/sending-email-in-net-through-gmail?answertab=oldest#tab-top . Just scroll down to the part where it says 'Additionally go to the Google Account > Security page' and start following those instructions except copy the app password into the appsettings.json file as below.
+4. If you chose to use an app password (which is the option I decided on) you will have to copy the account email and account app password to the appsettings.json file in the project.
+5. If you chose to enable Less secure app access you will have to copy the account email and account password to the appsettings.json file.
+
+Example:
+```
+  "Email": {
+    "Smtp": {
+      "Name": "Appointments Express",
+      "Host": "smtp.gmail.com",
+      "Port": 587,
+      "Username": "(your gmail email here)",
+      "Password": "(your app password here or the account password)"
+    }
+  }
+```
+
 ## Running project locally
 
 1. Build the project by navigating to Build > Build Solution and make sure that there are no errors.
@@ -79,10 +100,12 @@ Open up https://localhost:44371/api/stores in a browser to see the app. (There s
 3. When you create a heroku app navigate to the settings tab and scroll to the section on buildpacks and add a new buildpack, setting the url of the buildpack to `` https://github.com/jincod/dotnetcore-buildpack ``.
 4. While you are on the settings tab, scroll to the config vars section and add a config variable with the key of `` ASPNETCORE_ENVIRONMENT `` and a value of `` Production ``.
 5. Also add the following config vars from your cloudinary account: `` ApiKey `` set to your api key, `` ApiSecret `` set to your api secret, and `` CloudName `` set to the cloudinary cloud name.
-6. Next is to add the heroku postgresql addon to the app. Navigate to the resources tab and in the add-ons section, search for the Heroku Postgres addon and add it to your app (it should be free).
-7. Once you add the Postgres add-on to the app it should add another config variable called DATABASE_URL, which is used to get the connection string for the postgresql database.
-8. I've already setup the necessary code to automatically detect that the app is in production and create the connection string to connect to the Postgres database on Heroku and also run the necessary migrations on the database to keep it up to date.
-9. You can now deploy the app as you would a normal heroku app by following the instructions on the deploy tab in the heroku dashboard.
+6. Follow the instruction above in the - Setup GMail Email Sending Account - section of this README to create a gmail account with either an app password or the Less secure app access setting turned on (you don't have to copy the account details into the appsettings.json file so you can ignore steps (4) and (5) of those instructions)
+7. Create the following config vars from your gmail account: `` SmtpHost `` set to `` smtp.gmail.com ``, `` SmtpPort `` set to `` 587 ``, `` SmtpName `` set to `` Appointments Express `` (or any name you want to appear on the from field in emails), `` SmtpUsername `` set to your google email, and `` SmtpPassword `` set to your google email password or app password.
+8. Next is to add the heroku postgresql addon to the app. Navigate to the resources tab and in the add-ons section, search for the Heroku Postgres addon and add it to your app (it should be free).
+9. Once you add the Postgres add-on to the app it should add another config variable called DATABASE_URL, which is used to get the connection string for the postgresql database.
+10. I've already setup the necessary code to automatically detect that the app is in production and create the connection string to connect to the Postgres database on Heroku and also run the necessary migrations on the database to keep it up to date.
+11. You can now deploy the app as you would a normal heroku app by following the instructions on the deploy tab in the heroku dashboard.
 
 # Diagrams
 ![Database diagram](Screenshots/DBDiagram.png)
