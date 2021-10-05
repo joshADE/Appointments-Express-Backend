@@ -8,6 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Appointments_Express_Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Appointments_Express_Backend.DTO.Requests;
+using System.Net.Mail;
+using Microsoft.Extensions.Configuration;
+using FluentEmail.Smtp;
+using FluentEmail.Core;
+using System.Net;
+using Appointments_Express_Backend.Utils;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -17,10 +23,14 @@ namespace Appointments_Express_Backend.Controllers.api
     public class AppointmentsController : ControllerBase
     {
         private readonly AppointmentDBContext _context;
+        private readonly IConfiguration _config;
+        private readonly IMailSender _mailSender;
 
-        public AppointmentsController(AppointmentDBContext context)
+        public AppointmentsController(AppointmentDBContext context, IConfiguration config, IMailSender mailSender)
         {
             _context = context;
+            _config = config;
+            _mailSender = mailSender;
         }
 
         // GET: api/Appointments
@@ -51,7 +61,71 @@ namespace Appointments_Express_Backend.Controllers.api
             return await _context.Appointments.Where(app => app.storeId == storeId).ToListAsync();
         }
 
-        // POST: api/Appointments
+        // POST: api/Appointments/createappointment
+        [HttpPost("createappointment")]
+        public async Task<ActionResult<Appointment>> CreateAppointmentAndCustomerIfNotExist([FromBody] CreateAppointmentRequest request)
+        {
+
+            var email = request.email.ToLower();
+            var existingUser = await _context.Customers.FirstOrDefaultAsync(cus => cus.email == email);
+            var userExist = existingUser != null;
+
+            var appointment = request.appointment;
+            var customer = existingUser;
+
+
+
+            Random rnd = new Random();
+            var passcode = (rnd.Next(100000, 999999)).ToString();
+
+            using (var dbContextTransaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    
+
+                    if (!userExist)
+                    {
+                        
+                        customer = new Customer { email = request.email.ToLower(), firstName = request.firstName, lastName = request.lastName, password = BCrypt.Net.BCrypt.HashPassword(passcode) };
+                        _context.Customers.Add(customer);
+                    }
+                    else
+                    {
+                        // update the customers info and the passcode to be recent
+                        customer.firstName = request.firstName;
+                        customer.lastName = request.lastName;
+                        customer.password = BCrypt.Net.BCrypt.HashPassword(passcode);
+                        _context.Entry(customer).State = EntityState.Modified;
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    
+
+                    appointment.customerId = customer.id;
+                    appointment.status = Appointment.AppointmentStatus.pending;
+                    // store id of the appointment is set already by the client
+                    _context.Appointments.Add(appointment);
+                    await _context.SaveChangesAsync();
+
+
+                    await dbContextTransaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("A database error has occured", ex);
+                }
+            }
+
+            // send email to the customer
+            var link = request.domain + $"/customer/{customer.id}/appointments";
+            _mailSender.SendAppointmentConfirmationEmail(customer.email, customer.firstName + " " + customer.lastName, "Link to Appointment: " + link + " Passcode: " + passcode);
+
+            return CreatedAtAction("GetAppointment", new { id = appointment.id }, appointment);
+        }
+
+        // POST: api/Appointments/5/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost("{storeId}/{customerId}")]
@@ -85,5 +159,8 @@ namespace Appointments_Express_Backend.Controllers.api
         {
             return _context.Appointments.Any(e => e.id == id);
         }
+
+
+
     }
 }

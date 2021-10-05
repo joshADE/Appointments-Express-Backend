@@ -24,6 +24,9 @@ using Microsoft.OpenApi.Models;
 using CloudinaryDotNet;
 using AutoMapper;
 using Appointments_Express_Backend.Mapping;
+using System.Net.Mail;
+using System.Net;
+using Appointments_Express_Backend.Utils;
 
 namespace Appointments_Express_Backend
 {
@@ -79,6 +82,61 @@ namespace Appointments_Express_Backend
 
             services.AddSingleton(new Cloudinary(new Account(cloudName, apiKey, apiSecret)));
 
+            // Smtp Email Sender
+
+            string host = null;
+            int port = 587;
+            string username = null;
+            string password = null;
+            string name = null;
+
+            if (env == "Development")
+            {
+                host = Configuration.GetValue<string>("Email:Smtp:Host");
+                port = Configuration.GetValue<int>("Email:Smtp:Port");
+                username = Configuration.GetValue<string>("Email:Smtp:Username");
+                password = Configuration.GetValue<string>("Email:Smtp:Password");
+                name = Configuration.GetValue<string>("Email:Smtp:Name");
+            }
+            else
+            {
+                host = Environment.GetEnvironmentVariable("SmtpHost");
+                port = Convert.ToInt32(Environment.GetEnvironmentVariable("SmtpPort"));
+                username = Environment.GetEnvironmentVariable("SmtpUsername");
+                password = Environment.GetEnvironmentVariable("SmtpPassword");
+                name = Environment.GetEnvironmentVariable("SmtpName");
+                if (name == null)
+                {
+                    name = Configuration.GetValue<string>("Email:Smtp:Name");
+                }
+            }
+
+            if (new[] { host, username, password }.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException("Please specify Smtp Client details!");
+            }
+
+            services
+                .AddFluentEmail(username, name)
+                .AddRazorRenderer()
+                .AddSmtpSender(new SmtpClient(host)
+                {
+                    UseDefaultCredentials = false,
+                    Port = port,
+                    Credentials = new NetworkCredential(username, password),
+                    EnableSsl = true,
+                    Timeout = 20000,
+                    DeliveryMethod = SmtpDeliveryMethod.Network
+                });
+
+            // Mailer
+
+            services.AddScoped<IMailSender, MailSender>();
+            
+
+            // Configuration
+            
+            services.AddSingleton<IConfiguration>(Configuration);
 
             // Jwt Authentication Management
             var key = Configuration["Jwt:Key"];
