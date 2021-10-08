@@ -16,6 +16,7 @@ namespace Appointments_Express_Backend.Models
             pending,
             complete,
             declined,
+            accepted
         }
 
         [Key]

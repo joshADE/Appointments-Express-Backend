@@ -95,6 +95,11 @@ namespace Appointments_Express_Backend.Models
                     {
                         id = 5,
                         name = "Assign Managers"
+                    },
+                    new Permission
+                    {
+                        id = 6,
+                        name = "Edit Appointments"
                     });
 
             // UserStoreRole Table
@@ -146,6 +151,16 @@ namespace Appointments_Express_Backend.Models
                     {
                         roleId = 2,
                         permissionId = 4
+                    },
+                    new RolePermission
+                    {
+                        roleId = 1,
+                        permissionId = 6
+                    },
+                    new RolePermission
+                    {
+                        roleId = 2,
+                        permissionId = 6
                     });
 
             // StoreHours Table
