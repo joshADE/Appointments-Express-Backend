@@ -12,8 +12,9 @@ using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using FluentEmail.Smtp;
 using FluentEmail.Core;
-using System.Net;
+using Appointments_Express_Backend.AuthenticationManager;
 using Appointments_Express_Backend.Utils;
+using static Appointments_Express_Backend.Models.Appointment;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -137,6 +138,52 @@ namespace Appointments_Express_Backend.Controllers.api
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetAppointment", new { id = appointment.id }, appointment);
+        }
+
+        [Authorize]
+        [HttpPut("updateappointmentsstatus/{storeId}")]
+        public async Task<ActionResult<IEnumerable<Appointment>>> UpdateAppointmentsStatus([FromRoute] int storeId, [FromBody] UpdateAppointmentStatusRequest[] requests) {
+            var userIdString = Authorization.GetUserId(User);
+            if (userIdString == null) return BadRequest(new { errors = "Invalid authenticated user" });
+            var userId = int.Parse(userIdString);
+
+            var storeExist = await _context.Stores.FindAsync(storeId) != null;
+
+            if (!storeExist)
+            {
+                return NotFound();
+            }
+
+            if (!Authorization.UserHasPermission(_context, userId, storeId, "Edit Appointments"))
+            {
+                return Unauthorized();
+            }
+
+            var appUpdates = requests.ToDictionary(item => item.appointmentId, item => item.newStatus);
+
+            var allAppointments = await _context.Appointments.ToListAsync();
+            var appointments = allAppointments.Where(app => appUpdates.ContainsKey(app.id)).ToList();
+
+            if (appointments.Any(app => app.storeId != storeId))
+            {
+                return Unauthorized();
+            }
+
+            foreach(var app in appointments)
+            {
+                AppointmentStatus newStatus;
+                
+                if (appUpdates.TryGetValue(app.id, out newStatus))
+                {
+                    app.status = newStatus;
+                    _context.Entry(app).State = EntityState.Modified;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return appointments;
+
         }
 
         // DELETE: api/Appointments/5
