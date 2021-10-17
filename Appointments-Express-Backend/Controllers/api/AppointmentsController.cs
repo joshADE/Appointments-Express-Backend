@@ -154,6 +154,11 @@ namespace Appointments_Express_Backend.Controllers.api
                 return NotFound();
             }
 
+            if (requests.Any(update => !Enum.IsDefined(typeof(AppointmentStatus), update.newStatus)))
+            {
+                return BadRequest();
+            }
+
             if (!Authorization.UserHasPermission(_context, userId, storeId, "Edit Appointments"))
             {
                 return Unauthorized();
