@@ -14,6 +14,7 @@ namespace Appointments_Express_Backend.Mapping
         {
             CreateMap<User, UserResponse>();
 
+            CreateMap<Customer, CustomerResponse>();
         }
     }
 }

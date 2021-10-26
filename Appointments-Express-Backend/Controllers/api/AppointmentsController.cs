@@ -15,6 +15,8 @@ using FluentEmail.Core;
 using Appointments_Express_Backend.AuthenticationManager;
 using Appointments_Express_Backend.Utils;
 using static Appointments_Express_Backend.Models.Appointment;
+using Appointments_Express_Backend.DTO.Responses;
+using AutoMapper;
 
 namespace Appointments_Express_Backend.Controllers.api
 {
@@ -26,12 +28,16 @@ namespace Appointments_Express_Backend.Controllers.api
         private readonly AppointmentDBContext _context;
         private readonly IConfiguration _config;
         private readonly IMailSender _mailSender;
+        private readonly IMapper _mapper;
+        private readonly IJwtAuthenticationManager _jwtAuthenticationManager;
 
-        public AppointmentsController(AppointmentDBContext context, IConfiguration config, IMailSender mailSender)
+        public AppointmentsController(AppointmentDBContext context, IConfiguration config, IMailSender mailSender, IMapper mapper, IJwtAuthenticationManager jwtAuthenticationManager)
         {
             _context = context;
             _config = config;
             _mailSender = mailSender;
+            _mapper = mapper;
+            _jwtAuthenticationManager = jwtAuthenticationManager;
         }
 
         // GET: api/Appointments
@@ -189,6 +195,55 @@ namespace Appointments_Express_Backend.Controllers.api
 
             return appointments;
 
+        }
+
+        [HttpPost("logincustomer")]
+        public async Task<ActionResult<CustomerAuthResponse>> LoginCustomer([FromBody] CustomerAuthRequest request)
+        {
+            var customer = await _context.Customers.FindAsync(request.customerId);
+
+            if (customer == null)
+            {
+                return NotFound(new { errors = "Customer not found" });
+            }
+
+            bool isValidPasscode = BCrypt.Net.BCrypt.Verify(request.passcode, customer.password);
+
+            if (!isValidPasscode)
+            {
+                return Unauthorized(new { errors = "Invalid passcode" });
+            }
+
+            return Ok(new CustomerAuthResponse { customer = _mapper.Map<CustomerResponse>(customer), request = request });
+
+        }
+
+        [HttpGet("customerappointments/{customerId}")]
+        public async Task<ActionResult<IEnumerable<Appointment>>> GetCustomerAppointments([FromRoute] int customerId)
+        {
+            
+            return await _context.Appointments.Where(app => app.customerId == customerId).ToListAsync();
+        }
+
+        [HttpGet("customerappointmentdetails/{appointmentId}")]
+        public async Task<ActionResult<AppointmentAndStoreResponse>> GetCustomerAppointmentDetails([FromRoute] int appointmentId)
+        {
+
+            var appointment = await _context.Appointments.FindAsync(appointmentId);
+
+            if (appointment == null)
+            {
+                return NotFound(new { errors = "The appointment wasn't found" });
+            }
+
+            var store = await _context.Stores.FindAsync(appointment.storeId);
+
+            if (store == null)
+            {
+                return NotFound(new { errors = "The store for that appointment wasn't found" });
+            }
+
+            return Ok(new AppointmentAndStoreResponse { appointment = appointment, store = store }); 
         }
 
         // DELETE: api/Appointments/5
